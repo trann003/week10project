@@ -1,0 +1,77 @@
+---
+title: "Week 10 - Twitter"
+output: pdf_document
+knit: (function(inputFile, encoding) {
+    rmarkdown::render(inputFile, encoding = encoding, output_dir = "../output/")
+  })
+---
+
+
+
+# R Studio API Code
+```{r eval = F}
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+
+# Libraries
+```{r message = F}
+library(twitteR)
+library(tidyverse)
+```
+
+
+# Data Import and Cleaning
+```{r}
+api <- "USXSQ96P2LuIVPA5ilppBDofX"
+apiSecret <- "0ePRPNq4HXUxNEEeRVznqUasgeFwKAcMJ1Wqu7Nh8vrx8BjGxK"
+access <- "1243552285424340994-jeL8kxj8zRP95M9khVPCptH6NaWp7m"
+accessSecret <- "mMoP3SJ2dGY67j1yT9CLLeXTQ60X48ThtHjq1nJOPds6O"
+setup_twitter_oauth(api, apiSecret,access,accessSecret)
+```
+
+
+```{r}
+tweets <- searchTwitter("#rstats", 1000)
+tweets_tbl <- twListToDF(tweets) %>%
+  dplyr::select(screenName, text, favoriteCount, retweetCount) 
+```
+
+
+# Analysis
+```{r}
+tweets_tbl <- tweets_tbl %>%
+  rowwise() %>%
+  mutate(tweetlength = str_length(text))
+```
+
+## Correlation between length of tweet and retweet popularity
+```{r}
+cor.test(tweets_tbl$tweetlength, tweets_tbl$retweetCount)
+```
+
+
+## Correlation between length of tweet and likes/favorites
+```{r}
+cor.test(tweets_tbl$tweetlength, tweets_tbl$favoriteCount)
+```
+
+
+# Visualization
+```{r}
+tweets_tbl %>%
+  ggplot(aes(x = tweetlength, y = retweetCount)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F) +
+  labs(title = "Tweet length and retweet popularity") + 
+  theme_classic()
+
+
+tweets_tbl %>%
+  ggplot(aes(x = tweetlength, y = favoriteCount)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F) +
+  labs(title = "Tweet length and likes/favorites") + 
+  theme_classic()
+```
+

@@ -1,0 +1,50 @@
+---
+title: "Week 10 - Google scholar"
+output: pdf_document
+knit: (function(inputFile, encoding) {
+    rmarkdown::render(inputFile, encoding = encoding, output_dir = "../output/")
+  })
+---
+# R Studio API Code
+```{r eval = F}
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+
+# Libraries
+```{r message = F}
+library(httr)
+library(tidyverse)
+library(rvest)
+```
+
+
+# Data Import and Cleaning
+```{r}
+profile_tbl <- GET("https://scholar.google.com/citations?user=Li_99XsAAAAJ&hl=en") %>%
+  content() %>%
+  html_table()
+profile_tbl <- profile_tbl[[2]] %>%
+  set_names(profile_tbl[[2]][1, ]) %>% 
+  slice(-1) %>%
+  as_tibble("citation" = 1, "citationcount" = 2, "year" = 3, 
+            .name_repair = ~ c("citation", "citationcount", "year")) %>%
+  mutate(citationcount = as.numeric(citationcount),
+         year          = as.numeric(year))
+```
+
+# Analysis
+```{r}
+cor.test(profile_tbl$citationcount, profile_tbl$year)
+```
+
+# Visualization
+```{r}
+profile_tbl %>%
+  ggplot(aes(x = year, y = citationcount)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F) +
+  labs(title = "Citation count and Publication year") + 
+  theme_classic()
+```
+
